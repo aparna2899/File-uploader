@@ -2,6 +2,10 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 var fileType = require('file-type');
+var multiparty = require('multiparty');
+var fs = require('fs');
+// var AWS = require('aws-sdk');
+var { uploadFile, downloadFile,listFiles } = require('../modules/s3');
 
 router.get('/failure', (req, res) => {
   res.status(401).json({ msg: 'Failure' });
@@ -37,7 +41,7 @@ router.post('/file-upload', (req, res) => {
   form.parse(req, async (error, fields, files) => {
     if (error) {
       return res.status(500).send(error);
-    };
+    }
     try {
       const path = files.file[0].path;
       const buffer = fs.readFileSync(path);
@@ -46,9 +50,28 @@ router.post('/file-upload', (req, res) => {
       const data = await uploadFile(buffer, fileName, type);
       return res.status(200).send(data);
     } catch (err) {
-      return res.status(500).send(err);
+      console.log(err);
     }
   });
+});
+
+router.get('/file-list', async (req, res) => {
+  const { success, data } = await listFiles()
+  if (success) {
+    return res.json({ success, data })
+  }
+  return res.status(500).json({success: false, message: 'Error Occured !!!'})
+});
+
+router.get('/download/:filename', async (req, res) => {
+  var filename = req.params.filename
+  filename = 'bucketFolder/'.concat(filename)
+  console.log(filename)
+  const { success, data } = await downloadFile(filename)
+  if (success) {
+    return res.json({ success, data })
+  }
+  return res.status(500).json({ success: false, message: 'Error Occured !!!'})
 });
 
 module.exports = router;

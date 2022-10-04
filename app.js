@@ -8,9 +8,7 @@ var passport = require('passport');
 var cors = require('cors');
 require('dotenv').config();
 require('./modules/passport');
-var AWS = require('aws-sdk');
-var fs = require('fs');
-var multiparty = require('multiparty');
+
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -27,21 +25,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_Access_Key_ID,
-  secretAccessKey: process.env.AWS_Secret_Access_Key,
-});
-
-const uploadFile = (buffer, name, type) => {
-  const params = {
-    ACL: 'public-read',
-    Body: buffer,
-    Bucket: process.env.S3_BUCKET,
-    ContentType: type.mime,
-    Key: `${name}.${type.ext}`,
-  };
-  return s3.upload(params).promise();
-};
 
 //sesion middleware
 app.use(
@@ -62,7 +45,6 @@ app.use(
     credentials: true,
   })
 );
-
 
 
 app.use('/', indexRouter);
